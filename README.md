@@ -1,2 +1,2 @@
 # snake-game
-A Snake game implementation
+A Snake game with vanilla JS

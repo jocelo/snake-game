@@ -2,68 +2,82 @@
 // MAIN GAME LOGIC
 // -------------
 var game = (function(canvas){
-    var pixel,
+    var PIXEL,
         headPosition,
-        snakeTailSize,        
+        snakesnakeTail,
         food,
         speed,
         ctx,
-        fps;
+        CANVASIZE,
+        FPS;
 
     var init = function(){
         ctx = canvas.getContext('2d');
-        fps = 250;
-        pixel = 20;
+        FPS = 150;
+        PIXEL = 20;
+        CANVASIZE = { width: 400, height: 200 };
         headPosition = {x:60, y:60};
-        snakeTailSize = 0;
-        speed = {x:20, y:0};
+        snakeTail = [];
+        speed = {x:PIXEL, y:0};
         food = {};
+
         createFood();
     },
     start = function(){
         setInterval(function(){
             update();
             draw();
-        },fps);
+        },FPS);
     },
     end = function(){
 
     },
     draw = function(){
         // clean canvas
-        ctx.clearRect(0,0,800,600);
+        ctx.clearRect(0, 0, CANVASIZE.width, CANVASIZE.height);
 
         // snake fill
         ctx.fillStyle = 'white';
-        ctx.fillRect(headPosition.x, headPosition.y, pixel, pixel);
+        ctx.fillRect(headPosition.x, headPosition.y, PIXEL, PIXEL);
         
         // snake border
         ctx.strokeStyle = 'black';
-        ctx.strokeRect(headPosition.x, headPosition.y, pixel, pixel);
+        ctx.strokeRect(headPosition.x, headPosition.y, PIXEL, PIXEL);
+
+        for (var i=0 ; i<snakeTail.length ; i++) {
+            ctx.fillRect(snakeTail[i].x, snakeTail[i].y, PIXEL, PIXEL);
+            ctx.strokeRect(snakeTail[i].x, snakeTail[i].y, PIXEL, PIXEL);
+        }
 
         // draw food
-        ctx.fillStyle = '#FF0066';
-        ctx.fillRect(food.x, food.y, pixel, pixel);
-
+        ctx.fillStyle = 'yellowgreen';
+        ctx.fillRect(food.x, food.y, PIXEL, PIXEL);
     },
     update = function(){
+        for (var i=0 ; i<snakeTail.length-1 ; i++) {
+            snakeTail[i] = snakeTail[i+1];
+        }
+        if (snakeTail.length) {
+            snakeTail[snakeTail.length-1] = { x: headPosition.x, y: headPosition.y };
+        }
+
         headPosition.x += speed.x;
         headPosition.y += speed.y;
 
         eatFood();
     },
     updateSpeed = function(newX, newY){
-        speed.x = newX*pixel;
-        speed.y = newY*pixel;
+        speed.x = newX*PIXEL;
+        speed.y = newY*PIXEL;
     },
     createFood = function(){
-        food.x = Math.floor((Math.random()*800 + 1)/pixel) * pixel;
-        food.y = Math.floor((Math.random()*600 + 1)/pixel) * pixel;
+        food.x = Math.floor((Math.random()*CANVASIZE.width + 1)/PIXEL) * PIXEL;
+        food.y = Math.floor((Math.random()*CANVASIZE.height + 1)/PIXEL) * PIXEL;
     },
     eatFood = function(){
         distance = {x:headPosition.x-food.x, y:headPosition.y-food.y};
         if (distance.x == 0 && distance.y == 0) {
-            snakeTailSize++;
+            snakeTail.push({x:headPosition.x, y:headPosition.y});
             createFood();
         }
     },
@@ -87,7 +101,6 @@ var game = (function(canvas){
             keyCode == 'ArrowDown' && currentDirection == 'ArrowUp') {
             validCode = false;
         }
-
         return validCode;
     };
 
@@ -105,7 +118,7 @@ var game = (function(canvas){
 document.addEventListener('DOMContentLoaded',function(){
     game.init();
     game.start();
-});
+})
 
 document.addEventListener('keydown',function(e){
     if (!game.validDirection(e.code)) { return; }
@@ -124,4 +137,11 @@ document.addEventListener('keydown',function(e){
     } else if (e.code == 'ArrowRight') {
         game.changeSpeed(1, 0);
     }
-});
+})
+
+kill = function(){
+    var latest = setInterval(function(){},1000);
+    for (var i=0 ; i<latest ; i++) {
+        clearInterval(i);
+    }
+}

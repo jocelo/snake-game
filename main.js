@@ -2,31 +2,39 @@
 // MAIN GAME LOGIC
 // -------------
 var game = (function(canvas){
-    var PIXEL,
-        headPosition,
-        snakesnakeTail,
-        food,
-        speed,
+    var CANVASIZE,
+        FPS,
+        PIXEL,
         ctx,
-        CANVASIZE,
-        FPS;
+        food,
+        gameOver,
+        headPosition,
+        score,
+        snakesnakeTail,
+        speed;
 
     var init = function(){
-        ctx = canvas.getContext('2d');
+        CANVASIZE = { width: 400, height: 200 };
         FPS = 150;
         PIXEL = 20;
-        CANVASIZE = { width: 400, height: 200 };
+        ctx = canvas.getContext('2d');
+        food = {};
+        gameOver = false;
         headPosition = {x:60, y:60};
+        score = 0.1;
         snakeTail = [];
         speed = {x:PIXEL, y:0};
-        food = {};
 
         createFood();
     },
     start = function(){
         setInterval(function(){
-            update();
-            draw();
+            if (gameOver) {
+                drawGameOver();
+            } else {
+                update();
+                draw();
+            }
         },FPS);
     },
     end = function(){
@@ -53,6 +61,9 @@ var game = (function(canvas){
         ctx.fillStyle = 'yellowgreen';
         ctx.fillRect(food.x, food.y, PIXEL, PIXEL);
     },
+    drawGameOver = function(){
+        console.log('game over!!');
+    },
     update = function(){
         for (var i=0 ; i<snakeTail.length-1 ; i++) {
             snakeTail[i] = snakeTail[i+1];
@@ -65,6 +76,9 @@ var game = (function(canvas){
         headPosition.y += speed.y;
 
         eatFood();
+        checkCollision();
+
+        score += 0.05;
     },
     updateSpeed = function(newX, newY){
         speed.x = newX*PIXEL;
@@ -79,6 +93,32 @@ var game = (function(canvas){
         if (distance.x == 0 && distance.y == 0) {
             snakeTail.push({x:headPosition.x, y:headPosition.y});
             createFood();
+            score += 10;
+        }
+    },
+    checkCollision = function(){
+        gameOver = false;
+
+        if (headPosition.x < 0 ||
+            headPosition.x > CANVASIZE.width ||
+            headPosition.y < 0 ||
+            headPosition.y > CANVASIZE.height) {
+            gameOver = true;
+            console.log('wrong game over');
+            return;
+        }
+
+        console.log('--------------------- collision');
+        for (var i=snakeTail.length-1 ; i>0 ; i--) {
+            console.log('position:',i);
+            console.log('x: ',headPosition.x - snakeTail[i].x);
+            console.log('y: ',headPosition.y - snakeTail[i].y);
+            if (headPosition.x - snakeTail[i].x == 0 && 
+                headPosition.y - snakeTail[i].y == 0) {
+                console.log('wrong 2');
+                console.log('position: ',i,' length: ',snakeTail.length);
+                // gameOver = true;
+            }
         }
     },
     validateDirection = function(keyCode){
@@ -102,13 +142,17 @@ var game = (function(canvas){
             validCode = false;
         }
         return validCode;
+    },
+    getScore = function(){
+        return Math.floor(score);
     };
 
     return {
         init:init,
         start:start,
         changeSpeed:updateSpeed,
-        validDirection: validateDirection
+        validDirection: validateDirection,
+        readScore: getScore
     };
 })(document.getElementById('game-canvas'));
 
@@ -116,9 +160,13 @@ var game = (function(canvas){
 // EVENTS
 // -------------
 document.addEventListener('DOMContentLoaded',function(){
+    var scoreDiv = document.getElementById('score');
     game.init();
     game.start();
-})
+    setInterval(function(){
+        scoreDiv.innerHTML = 'SCORE: '+game.readScore();
+    },200);
+});
 
 document.addEventListener('keydown',function(e){
     if (!game.validDirection(e.code)) { return; }
@@ -137,7 +185,7 @@ document.addEventListener('keydown',function(e){
     } else if (e.code == 'ArrowRight') {
         game.changeSpeed(1, 0);
     }
-})
+});
 
 kill = function(){
     var latest = setInterval(function(){},1000);

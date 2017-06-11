@@ -1,2 +1,2 @@
 # snake-game
-A Snake game with vanilla JS
+A Snake game vanilla JS flavor!

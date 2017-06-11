@@ -1,7 +1,7 @@
 // -------------
 // MAIN GAME LOGIC
 // -------------
-var game = (function(canvas){
+var game = (function($canvas, $score){
     var CANVASIZE,
         FPS,
         PIXEL,
@@ -17,7 +17,7 @@ var game = (function(canvas){
         CANVASIZE = { width: 400, height: 200 };
         FPS = 150;
         PIXEL = 20;
-        ctx = canvas.getContext('2d');
+        ctx = $canvas.getContext('2d');
         food = {};
         gameOver = false;
         headPosition = {x:60, y:60};
@@ -34,11 +34,9 @@ var game = (function(canvas){
             } else {
                 update();
                 draw();
+                drawScore();
             }
         },FPS);
-    },
-    end = function(){
-
     },
     draw = function(){
         // clean canvas
@@ -61,8 +59,25 @@ var game = (function(canvas){
         ctx.fillStyle = 'yellowgreen';
         ctx.fillRect(food.x, food.y, PIXEL, PIXEL);
     },
+    drawScore = function(){
+        $score.innerHTML = 'SCORE: '+Math.floor(score);
+    },
     drawGameOver = function(){
         console.log('game over!!');
+        clearIntervals();
+
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = 'white';
+        ctx.fillRect(30, 30, CANVASIZE.width-60, CANVASIZE.height);
+        ctx.globalAlpha = 1.0;
+
+        ctx.fillStyle = 'black';
+        ctx.font = "40px digital";
+        ctx.fillText("Game Over", 110, 80);
+        ctx.font = "30px digital";
+        ctx.fillText("Score: "+Math.floor(score), 140, 130);
+        ctx.font = "20px digital";
+        ctx.fillText("Press 's' to start a new game.", 50, 180);
     },
     update = function(){
         for (var i=0 ; i<snakeTail.length-1 ; i++) {
@@ -100,9 +115,9 @@ var game = (function(canvas){
         gameOver = false;
 
         if (headPosition.x < 0 ||
-            headPosition.x > CANVASIZE.width ||
+            headPosition.x >= CANVASIZE.width ||
             headPosition.y < 0 ||
-            headPosition.y > CANVASIZE.height) {
+            headPosition.y >= CANVASIZE.height) {
             gameOver = true;
             //console.log('wrong game over');
             return;
@@ -143,18 +158,24 @@ var game = (function(canvas){
         }
         return validCode;
     },
-    getScore = function(){
-        return Math.floor(score);
+    getGameStatus = function(){
+        return gameOver;
+    },
+    clearIntervals = function(){
+        var latest = setInterval(function(){},1000);
+        for (var i=0 ; i<latest ; i++) {
+            clearInterval(i);
+        }
     };
 
     return {
-        init:init,
-        start:start,
         changeSpeed:updateSpeed,
-        validDirection: validateDirection,
-        readScore: getScore
+        init:init,
+        over: getGameStatus,
+        start:start,
+        validDirection: validateDirection
     };
-})(document.getElementById('game-canvas'));
+})(document.getElementById('game-canvas'), document.getElementById('game-score'));
 
 // -------------
 // EVENTS
@@ -163,20 +184,24 @@ document.addEventListener('DOMContentLoaded',function(){
     var scoreDiv = document.getElementById('score');
     game.init();
     game.start();
-    setInterval(function(){
-        scoreDiv.innerHTML = 'SCORE: '+game.readScore();
-    },200);
 });
 
 document.addEventListener('keydown',function(e){
-    if (!game.validDirection(e.code)) { return; }
-
-    if (e.code == 'Backspace') { // hold history back
+    if (e.code == 'Backspace') { // hold history backtick
         e.preventDefault();
         e.stopPropagation();
-    } else if (e.code == 's') { // game start
-        game.start();
-    } else if (e.code == 'ArrowUp') {
+    } else if (e.code == 'KeyS') { // game start
+        if ( game.over() ) {
+            game.init();
+            game.start();
+        }
+        return;
+    }
+
+    // avoid snake to go back on his own back
+    if (!game.validDirection(e.code)) { return; }
+    
+    if (e.code == 'ArrowUp') {
         game.changeSpeed(0, -1);
     } else if (e.code == 'ArrowDown') {
         game.changeSpeed(0, 1);

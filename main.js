@@ -104,19 +104,19 @@ var game = (function(canvas){
             headPosition.y < 0 ||
             headPosition.y > CANVASIZE.height) {
             gameOver = true;
-            console.log('wrong game over');
+            //console.log('wrong game over');
             return;
         }
 
-        console.log('--------------------- collision');
+        //console.log('--------------------- collision');
         for (var i=snakeTail.length-1 ; i>0 ; i--) {
-            console.log('position:',i);
-            console.log('x: ',headPosition.x - snakeTail[i].x);
-            console.log('y: ',headPosition.y - snakeTail[i].y);
+            //console.log('position:',i);
+            //console.log('x: ',headPosition.x - snakeTail[i].x);
+            //console.log('y: ',headPosition.y - snakeTail[i].y);
             if (headPosition.x - snakeTail[i].x == 0 && 
                 headPosition.y - snakeTail[i].y == 0) {
-                console.log('wrong 2');
-                console.log('position: ',i,' length: ',snakeTail.length);
+                //console.log('wrong 2');
+                //console.log('position: ',i,' length: ',snakeTail.length);
                 // gameOver = true;
             }
         }

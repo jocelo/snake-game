@@ -63,7 +63,6 @@ var game = (function($canvas, $score){
         $score.innerHTML = 'SCORE: '+Math.floor(score);
     },
     drawGameOver = function(){
-        console.log('game over!!');
         clearIntervals();
 
         ctx.globalAlpha = 0.8;
@@ -86,13 +85,11 @@ var game = (function($canvas, $score){
         if (snakeTail.length) {
             snakeTail[snakeTail.length-1] = { x: headPosition.x, y: headPosition.y };
         }
-
+        eatFood();
         headPosition.x += speed.x;
         headPosition.y += speed.y;
 
-        eatFood();
         checkCollision();
-
         score += 0.05;
     },
     updateSpeed = function(newX, newY){
@@ -100,8 +97,8 @@ var game = (function($canvas, $score){
         speed.y = newY*PIXEL;
     },
     createFood = function(){
-        food.x = Math.floor((Math.random()*CANVASIZE.width + 1)/PIXEL) * PIXEL;
-        food.y = Math.floor((Math.random()*CANVASIZE.height + 1)/PIXEL) * PIXEL;
+        food.x = Math.floor((Math.random()*(CANVASIZE.width-PIXEL) + 1)/PIXEL) * PIXEL;
+        food.y = Math.floor((Math.random()*(CANVASIZE.height-PIXEL) + 1)/PIXEL) * PIXEL;
     },
     eatFood = function(){
         distance = {x:headPosition.x-food.x, y:headPosition.y-food.y};
@@ -114,25 +111,20 @@ var game = (function($canvas, $score){
     checkCollision = function(){
         gameOver = false;
 
+        // out of bounds
         if (headPosition.x < 0 ||
             headPosition.x >= CANVASIZE.width ||
             headPosition.y < 0 ||
             headPosition.y >= CANVASIZE.height) {
             gameOver = true;
-            //console.log('wrong game over');
             return;
         }
-
-        //console.log('--------------------- collision');
+        
+        // naughty snake climbing over helself
         for (var i=snakeTail.length-1 ; i>0 ; i--) {
-            //console.log('position:',i);
-            //console.log('x: ',headPosition.x - snakeTail[i].x);
-            //console.log('y: ',headPosition.y - snakeTail[i].y);
             if (headPosition.x - snakeTail[i].x == 0 && 
                 headPosition.y - snakeTail[i].y == 0) {
-                //console.log('wrong 2');
-                //console.log('position: ',i,' length: ',snakeTail.length);
-                // gameOver = true;
+                gameOver = true;
             }
         }
     },
@@ -201,20 +193,8 @@ document.addEventListener('keydown',function(e){
     // avoid snake to go back on his own back
     if (!game.validDirection(e.code)) { return; }
     
-    if (e.code == 'ArrowUp') {
-        game.changeSpeed(0, -1);
-    } else if (e.code == 'ArrowDown') {
-        game.changeSpeed(0, 1);
-    } else if (e.code == 'ArrowLeft') {
-        game.changeSpeed(-1, 0);
-    } else if (e.code == 'ArrowRight') {
-        game.changeSpeed(1, 0);
-    }
+    if (e.code == 'ArrowUp') { game.changeSpeed(0, -1); }
+    else if (e.code == 'ArrowDown') { game.changeSpeed(0, 1); }
+    else if (e.code == 'ArrowLeft') { game.changeSpeed(-1, 0); }
+    else if (e.code == 'ArrowRight') { game.changeSpeed(1, 0); }
 });
-
-kill = function(){
-    var latest = setInterval(function(){},1000);
-    for (var i=0 ; i<latest ; i++) {
-        clearInterval(i);
-    }
-}

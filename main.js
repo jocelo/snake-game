@@ -2,20 +2,27 @@
 // MAIN GAME LOGIC
 // -------------
 var game = (function($canvas, $score){
-    const CANVASIZE = { width: 360, height: 225 };
-    const FPS = 150;
     const PIXEL = 15;
+    const CANVASIZE = { width: PIXEL * 24, height: PIXEL * 15 };
+    const FPS = 150;
+    
 
     let ctx,
+        cols,
         food,
         gameOver,
+        gridLength,
         headPosition,
+        maxScore,
+        rows,
         score,
-        speed,
-        maxScore;
+        speed;
 
     let init = function(){
         ctx = $canvas.getContext('2d');
+        rows = CANVASIZE.width / PIXEL;
+        cols = CANVASIZE.height / PIXEL;
+        gridLength = rows * cols;
         food = {};
         gameOver = false;
         headPosition = {x:60, y:60};
@@ -54,8 +61,37 @@ var game = (function($canvas, $score){
         }
     },
     createFood = function(){
-        food.x = Math.floor((Math.random()*(CANVASIZE.width-PIXEL) + 1)/PIXEL) * PIXEL;
-        food.y = Math.floor((Math.random()*(CANVASIZE.height-PIXEL) + 1)/PIXEL) * PIXEL;
+        let invalidPositions = new Array(gridLength);
+        invalidPositions.fill(0, 0, gridLength);
+        for (var i=0 ; i<snakeTail.length-1 ; i++) {
+            const col = snakeTail[i].x / PIXEL;
+            const row = snakeTail[i].y / PIXEL;
+            const idx = convertCoordsToIdx(row, col);
+
+            invalidPositions[idx] = 1;                
+        }
+
+        const availableSlots = invalidPositions.reduce((res, value, idx)=>{ 
+            if (value === 0) {
+                res.push(idx);
+            }
+            return res;
+        },[]);
+
+        const min = 0;
+        const max = Math.floor(availableSlots.length);
+        const randomIdx = Math.floor(Math.random() * (max - min + 1) + min);
+        const randomPosition = availableSlots[randomIdx];
+        const newRow = Math.floor(randomPosition / cols);
+        const newCol = randomPosition - (newRow * cols);
+
+        if (randomPosition) {
+            food.x = newRow * PIXEL;
+            food.y = newCol * PIXEL;
+        } else {
+            food.x = Math.floor((Math.random()*(CANVASIZE.width-PIXEL) + 1)/PIXEL) * PIXEL;
+            food.y = Math.floor((Math.random()*(CANVASIZE.height-PIXEL) + 1)/PIXEL) * PIXEL;
+        }
     },
     draw = function(){
         // clean canvas
@@ -129,7 +165,7 @@ var game = (function($canvas, $score){
         },FPS);
         drawMaxScore();
     },
-    update = function(){
+    update = function(){        
         for (var i=0 ; i<snakeTail.length-1 ; i++) {
             snakeTail[i] = snakeTail[i+1];
         }
@@ -168,13 +204,16 @@ var game = (function($canvas, $score){
             validCode = false;
         }
         return validCode;
+    },
+    convertCoordsToIdx = function(col, row) {
+        return ( row * PIXEL ) + col;
     };
 
     return {
         changeSpeed:updateSpeed,
-        init:init,
+        init,
         over: getGameStatus,
-        start:start,
+        start,
         validDirection: validateDirection
     };
 })(document.getElementById('game-canvas'), document.getElementById('game-score'));
